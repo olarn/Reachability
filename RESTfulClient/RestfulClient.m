@@ -19,9 +19,10 @@
 @end
 
 static Reachability * reachabilityObject;
-static BOOL isOnline;
 
 @implementation RestfulClient
+
+#pragma mark - public methods
 
 - (id)init
 {
@@ -37,13 +38,12 @@ static BOOL isOnline;
                 // on the main thread, like this:
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    isOnline = YES;
+                    NSLog(@"Reachable.");
                 });
             };
 
-            reachabilityObject.unreachableBlock = ^(Reachability*reach)
-            {
-                isOnline = NO;
+            reachabilityObject.unreachableBlock = ^(Reachability*reach) {
+                NSLog(@"Unreachable.");
             };
             
             // Start the notifier, which will cause the reachability object to retain itself!
@@ -56,10 +56,10 @@ static BOOL isOnline;
 - (void)httpGetFromUrl:(NSString *)urlString
         onOfflineBlock:(isOfflineBlock)offlineBlock
       downloadingBlock:(downloadingBlock)downloadingBlock
-   withCompletionBlock:(completionBlock)completionBlock
+       completionBlock:(completionBlock)completionBlock
             errorBlock:(errorBlock)errorBlock
 {
-    if (!isOnline) {
+    if (![reachabilityObject isReachable]) {
         offlineBlock();
         return;
     }
@@ -76,11 +76,11 @@ static BOOL isOnline;
 
     task = [session dataTaskWithURL:url
                   completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+
                       if (error) {
                           errorBlock(error);
                           return;
                       }
-                      
 
                       NSError * convertError;
                       NSDictionary * result = [NSJSONSerialization JSONObjectWithData:data
@@ -96,18 +96,19 @@ static BOOL isOnline;
     [task resume];
 }
 
-- (void)httpPostFromUrl:(NSString *)urlString
-               withData:(NSDictionary *)postData
-         onOfflineBlock:(isOfflineBlock)offlineBlock
-       downloadingBlock:(downloadingBlock)downloadingBlock
-    withCompletionBlock:(completionBlock)completionBlock
-             errorBlock:(errorBlock)errorBlock
+- (void)submitToUrl:(NSString *)urlString
+             method:(NSString *)method
+           withData:(NSDictionary *)postData
+     onOfflineBlock:(isOfflineBlock)offlineBlock
+   downloadingBlock:(downloadingBlock)downloadingBlock
+    completionBlock:(completionBlock)completionBlock
+         errorBlock:(errorBlock)errorBlock
 {
-    if (!isOnline) {
+    if (![reachabilityObject isReachable]) {
         offlineBlock();
         return;
     }
-
+    
     NSError * convertError;
     NSData * data = [NSJSONSerialization dataWithJSONObject:postData
                                                     options:0
@@ -118,14 +119,14 @@ static BOOL isOnline;
     }
     
     self.downloadingBlockCallback = downloadingBlock;
-
+    
     NSURL * url = [NSURL URLWithString:urlString];
     NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url
                                                             cachePolicy:NSURLRequestUseProtocolCachePolicy
                                                         timeoutInterval:10];
     [request addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     [request addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    [request setHTTPMethod:@"POST"];
+    [request setHTTPMethod:method];
     [request setHTTPBody:data];
     
     NSURLSessionConfiguration * defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
@@ -153,7 +154,7 @@ static BOOL isOnline;
                               }
                               completionBlock(result);
                           }
-
+                          
                       }];
     [task resume];
 }

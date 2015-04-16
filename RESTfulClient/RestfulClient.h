@@ -20,14 +20,15 @@ typedef void(^errorBlock)(NSError * error);
 - (void)httpGetFromUrl:(NSString *)urlString
         onOfflineBlock:(isOfflineBlock)offlineBlock
       downloadingBlock:(downloadingBlock)downloadingBlock
-   withCompletionBlock:(completionBlock)completionBlock
+       completionBlock:(completionBlock)completionBlock
             errorBlock:(errorBlock)errorBlock;
 
-- (void)httpPostFromUrl:(NSString *)urlString
-               withData:(NSDictionary *)postData
-         onOfflineBlock:(isOfflineBlock)offlineBlock
-       downloadingBlock:(downloadingBlock)downloadingBlock
-    withCompletionBlock:(completionBlock)completionBlock
-             errorBlock:(errorBlock)errorBlock;
+- (void)submitToUrl:(NSString *)urlString
+             method:(NSString *)method
+           withData:(NSDictionary *)postData
+     onOfflineBlock:(isOfflineBlock)offlineBlock
+   downloadingBlock:(downloadingBlock)downloadingBlock
+    completionBlock:(completionBlock)completionBlock
+         errorBlock:(errorBlock)errorBlock;
 
 @end
