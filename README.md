@@ -72,6 +72,22 @@ In addition, it asks the `Reachability` object to consider the WWAN (3G/EDGE/CDM
 
 	[reach startNotifier];
 
+### Restful Client Example
+
+    #import "RestfulClient.h"
+
+    RestfulClient * client = [[RestfulClient alloc] init];
+    
+    [client httpGetFromUrl:@"https://www.google.com"
+            onOfflineBlock:^{
+            } downloadingBlock:^(float totalSize, float percent) {
+                NSLog(@"downloading ... %f percent (total %f)", percent, totalSize);
+            } withCompletionBlock:^(NSDictionary *results) {
+                NSLog(@"result = %@", results);
+            } errorBlock:^(NSError *error) {
+                NSLog(@"Error :- %@", [error description]);
+            }];
+
 ## Tell the world
 
 Head over to [Projects using Reachability](https://github.com/tonymillion/Reachability/wiki/Projects-using-Reachability) and add your project for "Maximum Wins!".
